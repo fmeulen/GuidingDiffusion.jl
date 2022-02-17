@@ -35,10 +35,6 @@ function pcn!(Zᵒ, Z, Zbuffer, ρs, ℙ)
     end
 end
   
-function printinfo(ll, llᵒ, s::String) 
-    println(s * " update. ll $ll; llᵒ $llᵒ, difference: ",round(llᵒ-ll;digits=3)) 
-    #println()
-end
   
 function copy!(Z1::Innovations, Z2::Innovations)
     for i in eachindex(Z1.z)

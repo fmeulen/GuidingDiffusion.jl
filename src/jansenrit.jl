@@ -113,35 +113,6 @@ Bridge.b(t, x, P::JansenRitDiffusionAux) = Bridge.B(t,P) * x + Bridge.β(t,P)
 
 
 
-function BackwardFilter(S, ℙ::JansenRitDiffusion, AuxType, obs, obsvals, timegrids) 
-    ℙ̃s = [AuxType(obs[i].t, obsvals[i][1], false, false, ℙ) for i in 2:length(obs)] # careful here: observation is passed as Float64
-   h0, Ms = backwardfiltering(S, obs, timegrids, ℙ̃s)
-   #new{eltype(Ms), typeof(h0)}(Ms, h0)
-   BackwardFilter(Ms,h0)
-end
-
-# the one below is with guiding term based on deterministic solution x1-x4 system
-function BackwardFilter(S, ℙ::JansenRitDiffusion, AuxType, obs, obsvals, timegrids, x0) 
-   x1_init=0.0
-   i=2
-   lininterp = LinearInterpolation([obs[i-1].t, obs[i].t], [x1_init, x1_init] )
-   ℙ̃s = [AuxType(obs[i].t, obsvals[i][1], lininterp, true, ℙ)] # careful here: observation is passed as Float64
-   n = length(obs)
-   for i in 3:n # skip x0
-   lininterp = LinearInterpolation([obs[i-1].t, obs[i].t], [x1_init, x1_init] )
-   push!(ℙ̃s, AuxType(obs[i].t, obsvals[i][1], lininterp, true, ℙ))  # careful here: observation is passed as Float64
-   end
-   h0, Ms = backwardfiltering(S, obs, timegrids, ℙ̃s)
-   if guidingterm_with_x1
-       add_deterministicsolution_x1!(Ms, x0)
-       h0 = backwardfiltering!(S, Ms, obs)
-   end
-   #new{eltype(Ms), typeof(h0)}(Ms, h0)
-   BackwardFilter(Ms,h0)
-end
-
-
-
 # solving for deterministic system in (x1, x4)
 
 """
@@ -187,6 +158,37 @@ function add_deterministicsolution_x1!(Ms::Vector{Message}, x0)
         @set! u.ℙ̃.guidingterm_with_x1 = true
         Ms[i] = u 
     end
+end
+
+
+
+
+
+function BackwardFilter(S, ℙ::JansenRitDiffusion, AuxType, obs, obsvals, timegrids) 
+    ℙ̃s = [AuxType(obs[i].t, obsvals[i][1], false, false, ℙ) for i in 2:length(obs)] # careful here: observation is passed as Float64
+   h0, Ms = backwardfiltering(S, obs, timegrids, ℙ̃s)
+   #new{eltype(Ms), typeof(h0)}(Ms, h0)
+   BackwardFilter(Ms,h0)
+end
+
+# the one below is with guiding term based on deterministic solution x1-x4 system
+function BackwardFilter(S, ℙ::JansenRitDiffusion, AuxType, obs, obsvals, timegrids, x0) 
+   x1_init=0.0
+   i=2
+   lininterp = LinearInterpolation([obs[i-1].t, obs[i].t], [x1_init, x1_init] )
+   ℙ̃s = [AuxType(obs[i].t, obsvals[i][1], lininterp, true, ℙ)] # careful here: observation is passed as Float64
+   n = length(obs)
+   for i in 3:n # skip x0
+   lininterp = LinearInterpolation([obs[i-1].t, obs[i].t], [x1_init, x1_init] )
+   push!(ℙ̃s, AuxType(obs[i].t, obsvals[i][1], lininterp, true, ℙ))  # careful here: observation is passed as Float64
+   end
+   h0, Ms = backwardfiltering(S, obs, timegrids, ℙ̃s)
+   if guidingterm_with_x1
+       add_deterministicsolution_x1!(Ms, x0)
+       h0 = backwardfiltering!(S, Ms, obs)
+   end
+   #new{eltype(Ms), typeof(h0)}(Ms, h0)
+   BackwardFilter(Ms,h0)
 end
 
 

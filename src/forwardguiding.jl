@@ -17,7 +17,7 @@ function forwardguide(x0, ℙ, Z, M::Message)
         if i<=length(tt)-1-sk
             db = b  - Bridge.b(tt[i], x, ℙ̃)
             ll += dot(db, r) * dt
-            if !constdiff(ℙ) || !constdiff(ℙ̃)
+            if !Bridge.constdiff(ℙ) || !Bridge.constdiff(ℙ̃)
                 σ̃ = Bridge.σ(tt[i], ℙ̃)
                 ll += 0.5*Bridge.inner( σ' * r) * dt    # |σ(t,x)' * tilder(t,x)|^2
                 ll -= 0.5*Bridge.inner(σ̃' * r) * dt   # |tildeσ(t)' * tilder(t,x)|^2

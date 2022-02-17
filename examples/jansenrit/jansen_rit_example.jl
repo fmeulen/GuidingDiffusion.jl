@@ -3,8 +3,13 @@ cd(wdir)
 outdir= joinpath(wdir, "out")
 
 using Revise
+using LinearAlgebra
 using GuidingDiffusion
+using Distributions
+using Bridge
 using Plots
+
+
 
 # using Bridge, StaticArrays, Distributions
 # #using Test, Statistics, 
@@ -26,12 +31,14 @@ using Plots
 # #using Parameters
 
 #import Bridge: R3, IndexedTime, llikelihood, kernelr3, constdiff, Euler, solve, solve!
+
+using StaticArrays
 import Bridge: constdiff
 
 sk = 0 # skipped in evaluating loglikelihood
 
-include("jansenrit.jl")
-include("jansenrit3.jl")
+# include("jansenrit.jl")
+# include("jansenrit3.jl")
 
 include("plotting.jl")
 
