@@ -1,0 +1,4 @@
+name = "GuidingDiffusion"
+uuid = "08791cef-0137-4383-9c03-e55d6239f825"
+authors = ["fmeulen <f.h.vandermeulen@tudelft.nl>"]
+version = "0.1.0"
