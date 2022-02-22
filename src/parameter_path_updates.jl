@@ -1,5 +1,3 @@
-
-
 function setpar(θ, ℙ, move) 
     tup = (; zip(move.names, θ)...) # try copy here
     setproperties(ℙ, tup)
@@ -7,19 +5,50 @@ end
 
 getpar(names_, ℙ) = SVector(ntuple(i -> getproperty(ℙ, names_[i]), length(names_)))# 
 
-propose(move) = (θ) -> move.K(θ)
-logpriordiff(move) = (θ, θᵒ) -> sum(logpdf(move.prior, θᵒ) - logpdf(move.prior, θ)) 
-setpar(move) = (θ, ℙ) -> setpar(θ, ℙ, move) 
-getpar(move) = (ℙ) -> getpar(move.names, ℙ) 
 
-function parameterkernel(θ, tuningpars, s) 
-    shortrange = rand()>s
-    Δ = shortrange ?  rand(MvNormal(tuningpars.short)) : rand(MvNormal(tuningpars.long))
-    θ + Δ
+function log_prior_ratio(θ, θᵒ, move)
+    M = product_distribution(move.prior)
+    sum(logpdf(M, θᵒ) - logpdf(M, θ))
+end 
+
+
+
+# function parameterkernel(θ, tuningpars, s) 
+#     shortrange = rand()>s
+#     Δ = shortrange ?  rand(MvNormal(tuningpars.short)) : rand(MvNormal(tuningpars.long))
+#     θ + Δ
+#   end
+  
+# parameterkernel(tuningpars; s=0.33) = (θ) -> parameterkernel(θ, tuningpars, s) 
+
+# computing log prior ratio
+function log_proposal_ratio(θ, θᵒ, param)
+    if param ∈ [:α1, :α2]
+      return log(θᵒ/θ) + log((1. - θᵒ)/(1. - θ))
+    else
+      return log(θᵒ/θ)
+    end
   end
   
-parameterkernel(tuningpars; s=0.33) = (θ) -> parameterkernel(θ, tuningpars, s) 
+function log_proposal_ratio(θ, θᵒ, move::ParMove)
+    out =  0.0
+    params = move.names
+    for i ∈ eachindex(params)
+      out += log_proposal_ratio(θ[i], θᵒ[i], params[i])
+    end
+    out
+  end
   
+
+# define methods for move
+propose(move) = (θ) -> move.K(θ)
+log_prior_ratio(move) = (θ, θᵒ) -> log_prior_ratio(θ, θᵒ, move)
+setpar(move) = (θ, ℙ) -> setpar(θ, ℙ, move) 
+getpar(move) = (ℙ) -> getpar(move.names, ℙ) 
+log_proposal_ratio(move) = (θ, θᵒ) -> log_proposal_ratio(θ, θᵒ, move)
+  
+
+
 function adjust_PNCparamters!(ρs, ρ; thresh=0.25)
     for i in eachindex(ρs)
         U = rand()
@@ -73,7 +102,7 @@ function parupdate!(B, ℙ, x0, Z, ll, XX, move, obs, obsvals, S, AuxType, timeg
     XXᵒ, llᵒ = forwardguide(Bᵒ, ℙᵒ)(x0, Z)
     !verbose && printinfo(ll, llᵒ, "par") 
 
-    if log(rand()) < llᵒ-ll + logpriordiff(move)(θ, θᵒ)
+    if log(rand()) < llᵒ-ll + log_prior_ratio(move)(θ, θᵒ) + log_proposal_ratio(move)(θ, θᵒ)
       @. XX = XXᵒ
       ll = llᵒ
       B = Bᵒ

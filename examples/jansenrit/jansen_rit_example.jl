@@ -8,37 +8,9 @@ using GuidingDiffusion
 using Distributions
 using Bridge
 using Plots
-
-
-
-# using Bridge, StaticArrays, Distributions
-# #using Test, Statistics, 
-# using Random, LinearAlgebra
-# using Bridge.Models
-# #using DelimitedFiles
-# #using DataFrames
-# # using CSV
-# #using ForwardDiff
-# using DifferentialEquations
-# using Setfield
-# using Plots
-# using ConstructionBase
-# using Interpolations
-# using IterTools
-# using ProfileView
-# #using RCall
-# #using SparseArrays
-# #using Parameters
-
-#import Bridge: R3, IndexedTime, llikelihood, kernelr3, constdiff, Euler, solve, solve!
-
 using StaticArrays
-import Bridge: constdiff
+#import Bridge: constdiff
 
-sk = 0 # skipped in evaluating loglikelihood
-
-# include("jansenrit.jl")
-# include("jansenrit3.jl")
 
 include("plotting.jl")
 
@@ -56,12 +28,55 @@ skip_it = 200
 subsamples = 0:skip_it:iterations # for saving paths
 
 # define priors
-priorC = Exponential(150.0)
-priorσ = Uniform(0.0, 1_000.0)
-priorα1 = Uniform(0.0,1.0)
 
-# define parameter moves
-moveC = ParMove([:C], parameterkernel((short=[1.0], long=[5.0]); s=0.0), priorC, false)
+# prior = Dict("A"=> Exponential(3.25), 
+#             "B" => Exponential(22.0),
+#             "C" => Exponential(135.0),
+#             "α1" => Uniform(0.0, 1.0),
+#             "α2" => Uniform(0.0, 1.0),
+#             "e0" => Exponential(5.0),
+#             "v0" => Exponential(6.0),
+#             "r" => Exponential(0.56),
+#             "μ" => Exponential(200.0),
+#             "σ" => Uniform(0.0, 10_000.0)  )
+
+Π = (A=Exponential(3.25), 
+        B=Exponential(22.0),
+        C=Exponential(135.0),
+        α1=Beta(1.0, 1.0),
+        α2=Beta(1.0, 1.0),
+        e0=Exponential(5.0),
+        v0=Exponential(6.0),
+        r=Exponential(0.56),
+        μ=Exponential(200.0),
+        σ=InverseGamma(0.1, 0.1) )
+
+
+𝒯 = (A=(short=0.2, long=1.0),
+B=(short=0.2, long=1.0),
+C=(short=0.2, long=1.0),
+α1=(short=0.2, long=1.0),
+α2=(short=0.2, long=1.0),
+e0=(short=0.2, long=1.0),
+v0=(short=0.2, long=1.0),
+r=(short=0.2, long=1.0),
+μ=(short=0.2, long=1.0),
+σ=(short=0.2, long=1.0) )
+
+
+
+
+#import GuidingDiffusion: parameterkernel
+
+# some testing
+
+move = ParMove([:A, :μ], false, 𝒯, Π)
+ParMove([:σ], false, 𝒯, Π)
+
+θ = exp.(rand(2))
+θᵒ = move.K(θ)
+
+Πsub = [getfield(Π,x) for x in [:A, :μ] ] 
 
 moveσ = ParMove([:σ], parameterkernel((short=[3.0], long=[10.0]); s=0.0), priorσ, true)
 
@@ -156,7 +171,7 @@ for i in 1:iterations
   end
 
   # update target chain
-  smallworld = rand() > 0#0.33
+  smallworld = rand() > 0.33
   if smallworld
     ll, B, ℙ, accpar_ = parupdate!(B, XX, movetarget, obs, obsvals, S, AuxType, timegrids; verbose=verbose)(x0, ℙ, Z, ll);# θ and XX may get overwritten
     accmove_ =0

@@ -163,3 +163,7 @@ upper = [10.0, 0.9, 250.0]
 Optim.optimize(loglik(ℙ0, x0, Z, parnames,  S, AuxType, obs, obsvals, timegrids), lower, upper, θ, SimulatedAnnealing())
 
 ForwardDiff.gradient(loglik(ℙ0, x0, Z, parnames,  S, AuxType, obs, obsvals, timegrids), lower, upper, θ)
+
+
+
+# drawing from the priors for initialisation 

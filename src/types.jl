@@ -9,6 +9,17 @@ struct DE{T} <: Solver
     solvertype::T
 end
 
+
+function parameterkernel(θ, 𝒯 , s, Π) 
+    b = bijector.(Π)
+    shortrange = rand()>s
+    Δ = shortrange ?  rand(MvNormal(𝒯.short)) : rand(MvNormal(𝒯.long))
+    #inverse(b)(b(θ) + Δ)
+    [inverse(b[i])(b[i](θ[i] + Δ[i])) for i in eachindex(θ)]
+end
+#parameterkernel(𝒯, prior, s) = (θ) -> parameterkernel(θ, 𝒯, s, prior) 
+
+
 """
     ParMove{Tn, Tkernel, Tp, Tr}
 
@@ -22,7 +33,25 @@ struct ParMove{Tn, Tkernel, Tp, Tr}
   K::Tkernel
   prior::Tp
   recomputeguidingterm::Tr
+
+  Parmove(n::Vector{Tn},K::Tkernel,Π::Tp,rec::Tr) where {Tn, Tkernel, Tp, Tr} =
+  new{Tn, Tkernel, Tp, Tr}(n, K, Π, rec)
+
+  function ParMove(names_::Vector{Symbol}, recomputeguidingterm, 𝒯, Π; s=0.33)
+    Πsub = [getfield(Π,x) for x in names_] 
+    sh = map(x-> getfield(𝒯,x).short, names_)
+    lo = map(x-> getfield(𝒯,x).long, names_)
+    𝒯sub = (short=sh, long=lo)
+    #K = parameterkernel(tp, Πsub, s)
+    K = (θ) -> parameterkernel(θ, 𝒯sub, s, Πsub) 
+
+    new{eltype(names_), typeof(K), typeof(Πsub), typeof(recomputeguidingterm)}(names_ ,K , Πsub, recomputeguidingterm)
+  end  # right now it is recursive
 end
+
+
+
+
 
 
 struct Innovations{T}

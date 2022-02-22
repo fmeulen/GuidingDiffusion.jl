@@ -2,3 +2,6 @@ name = "GuidingDiffusion"
 uuid = "08791cef-0137-4383-9c03-e55d6239f825"
 authors = ["fmeulen <f.h.vandermeulen@tudelft.nl>"]
 version = "0.1.0"
+
+[deps]
+Bijectors = "76274a88-744f-5084-9051-94815aaf08c4"

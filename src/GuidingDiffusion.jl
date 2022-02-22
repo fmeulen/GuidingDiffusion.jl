@@ -13,9 +13,11 @@ using ConstructionBase
 using Interpolations
 using IterTools
 using Parameters
+using Bijectors
 
-const sk=0
+const sk=0 # skipped in evaluating loglik
 const ℝ{N} = SVector{N, Float64}
+
 export ℝ
 export @set!
 export Vern7, Vern7direct, DE, properties, setproperties
