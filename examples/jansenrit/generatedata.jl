@@ -50,13 +50,13 @@ end
 #----------- obs and obsvals are input to mcmc algorithm
 
 # -- now obs with staionary prior on x0
-obs = [Observation(-1.0,  x00,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
-for i in 1:length(obstimes)
-  push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
-end
-pushfirst!(obsvals, SA[0.0])
-Xf = Xf_prelim
-x0 = x00
+# obs = [Observation(-1.0,  x00,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
+# for i in 1:length(obstimes)
+#   push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
+# end
+# pushfirst!(obsvals, SA[0.0])
+# Xf = Xf_prelim
+# x0 = x00
 
 
 # remainder is checking 

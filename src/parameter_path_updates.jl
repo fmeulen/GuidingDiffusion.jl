@@ -23,6 +23,9 @@ end
 
 # computing log prior ratio
 function log_proposal_ratio(θ, θᵒ, param)
+    # @show θ
+    # @show θᵒ
+    
     if param ∈ [:α1, :α2]
       return log(θᵒ/θ) + log((1. - θᵒ)/(1. - θ))
     else
@@ -92,7 +95,10 @@ checkstate(B, ℙ) = (w) -> checkstate(w,B, ℙ)
 function parupdate!(B, ℙ, x0, Z, ll, XX, move, obs, obsvals, S, AuxType, timegrids; verbose=true)
     accpar_ = false
     θ =  getpar(move)(ℙ)  #move.par(ℙ)
+    #@show θ
     θᵒ = propose(move)(θ)   
+    #@show θᵒ
+    #println()  
     ℙᵒ = setpar(move)(θᵒ, ℙ)    
     if move.recomputeguidingterm        
         Bᵒ = BackwardFilter(S, ℙᵒ, AuxType, obs, obsvals, timegrids);

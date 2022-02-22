@@ -11,13 +11,15 @@ end
 
 
 function parameterkernel(θ, 𝒯 , s, Π) 
-    b = bijector.(Π)
-    shortrange = rand()>s
+    b = bijector.(Π) # [bijector(x) for x ∈ Π]
+    b⁻ = inverse.(b)
+    shortrange = rand() > s
     Δ = shortrange ?  rand(MvNormal(𝒯.short)) : rand(MvNormal(𝒯.long))
     #inverse(b)(b(θ) + Δ)
-    [inverse(b[i])(b[i](θ[i] + Δ[i])) for i in eachindex(θ)]
+    #@show θ
+    [b⁻[i]( b[i](θ[i]) + Δ[i] ) for i in eachindex(θ)]
 end
-#parameterkernel(𝒯, prior, s) = (θ) -> parameterkernel(θ, 𝒯, s, prior) 
+parameterkernel(𝒯, prior, s) = (θ) -> parameterkernel(θ, 𝒯, s, prior) 
 
 
 """
@@ -43,8 +45,8 @@ struct ParMove{Tn, Tkernel, Tp, Tr}
     lo = map(x-> getfield(𝒯,x).long, names_)
     𝒯sub = (short=sh, long=lo)
     #K = parameterkernel(tp, Πsub, s)
-    K = (θ) -> parameterkernel(θ, 𝒯sub, s, Πsub) 
-
+    #K = (θ) -> parameterkernel(θ, 𝒯sub, s, Πsub) 
+    K = parameterkernel(𝒯sub, Πsub, s)
     new{eltype(names_), typeof(K), typeof(Πsub), typeof(recomputeguidingterm)}(names_ ,K , Πsub, recomputeguidingterm)
   end  # right now it is recursive
 end

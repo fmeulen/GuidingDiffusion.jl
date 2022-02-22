@@ -23,7 +23,7 @@ include("generatedata.jl")
 timegrids = set_timegrids(obs, 0.0005)
 
 
-iterations = 2_000  #5_00
+iterations = 4_000  #5_00
 skip_it = 200
 subsamples = 0:skip_it:iterations # for saving paths
 
@@ -52,11 +52,11 @@ subsamples = 0:skip_it:iterations # for saving paths
         σ=InverseGamma(0.1, 0.1) )
 
 
-𝒯 = (A=(short=0.2, long=1.0),
+𝒯 = (A=(short=0.02, long=.1),
 B=(short=0.2, long=1.0),
-C=(short=0.2, long=1.0),
-α1=(short=0.2, long=1.0),
-α2=(short=0.2, long=1.0),
+C=(short=0.05, long=1.0),
+α1=(short=0.02, long=.1),
+α2=(short=0.02, long=.1),
 e0=(short=0.2, long=1.0),
 v0=(short=0.2, long=1.0),
 r=(short=0.2, long=1.0),
@@ -69,57 +69,48 @@ r=(short=0.2, long=1.0),
 #import GuidingDiffusion: parameterkernel
 
 # some testing
+params = [:C, :α1, :α2, :A]
+move = ParMove(params, false, 𝒯, Π)
 
-move = ParMove([:A, :μ], false, 𝒯, Π)
-ParMove([:σ], false, 𝒯, Π)
 
-θ = exp.(rand(2))
-θᵒ = move.K(θ)
 
-Πsub = [getfield(Π,x) for x in [:A, :μ] ] 
 
-moveσ = ParMove([:σ], parameterkernel((short=[3.0], long=[10.0]); s=0.0), priorσ, true)
-
-moveCᵒ = ParMove([:C], parameterkernel((short=[40.0], long=[100.0])), priorC, false)
-
-moveCσ = ParMove([:C, :σ], parameterkernel((short=[2.0, 10.0], long=[10.0, 10.0]); s=0.0), product_distribution([priorC, priorσ]), true)
-
-moveCσα1 = ParMove([:C, :σ, :α1], parameterkernel((short=[2.0, 10.0, 0.01], long=[10.0, 10.0, 0.1]); s=0.0), product_distribution([priorC, priorσ, priorα1]), true)
-
-moveCα1 = ParMove([:C, :α2], parameterkernel((short=[2.0,  0.01], long=[10.0,  0.1]); s=0.3), product_distribution([priorC,  priorα1]), false)
+# moveσ = ParMove([:σ], parameterkernel((short=[3.0], long=[10.0]); s=0.0), priorσ, true)
+# moveCᵒ = ParMove([:C], parameterkernel((short=[40.0], long=[100.0])), priorC, false)
+# moveCσ = ParMove([:C, :σ], parameterkernel((short=[2.0, 10.0], long=[10.0, 10.0]); s=0.0), product_distribution([priorC, priorσ]), true)
+# moveCσα1 = ParMove([:C, :σ, :α1], parameterkernel((short=[2.0, 10.0, 0.01], long=[10.0, 10.0, 0.1]); s=0.0), product_distribution([priorC, priorσ, priorα1]), true)
+# moveCα1 = ParMove([:C, :α2], parameterkernel((short=[2.0,  0.01], long=[10.0,  0.1]); s=0.3), product_distribution([priorC,  priorα1]), false)
 # a small program
 
 # settings
 verbose = true # if true, surpress output written to console
 
 
-θinit = 100.0
-ESTσ = true
+θinit = 50.0
+ESTσ = false
 
 
 
 if ESTσ
   θ = (C=copy(θinit), σ = 2.0)
-  movetarget = moveCσ
+  movetarget = move
   allparnames = [:C, :σ]
 else
   θ = (; C = copy(θinit) ) # initial value for parameter
-  movetarget = moveC
+  movetarget = move
   allparnames = [:C]
 end
 ℙ = setproperties(ℙ0, θ)
 
-θ = (C=copy(θinit), α1=0.5)
-movetarget = moveCα1
-allparnames = [:C,  :α2]
-ℙ = setproperties(ℙ0, θ)
 
-𝒯 = 40.0 # temperature
-ℙe = setproperties(ℙ0, C=copy(θinit),  σ = 𝒯)
+temp = 40.0 # temperature
+ℙe = setproperties(ℙ0, C=copy(θinit),  σ = temp)
 allparnamese = [:C]
-move_exploring = moveCᵒ
+move_exploring = move # moveCᵒ
 
-
+# overwrite, figure out later precisely
+allparnames = params
+allparnamese = params
 
 # pcn pars 
 ρ = 0.95
@@ -164,7 +155,7 @@ for i in 1:iterations
   (i % 500 == 0) && println(i)
   
   # update exploring chain
-  if i==1  
+  if i>=1  
   lle, Be, ℙe, accpare_ = parupdate!(Be, XXe, move_exploring, obs, obsvals, S, AuxType, timegrids; verbose=verbose)(x0, ℙe, Ze, lle);# θe and XXe may get overwritten
   lle, accinnove_ = pcnupdate!(Be, ℙe, XXe, Zbuffer, Zeᵒ, ρse)(x0, Ze, lle); # Z and XX may get overwritten
   push!(exploring, State(x0, copy(Ze), getpar(allparnamese, ℙe), copy(lle)))   # collection of samples from exploring chain
@@ -185,7 +176,7 @@ for i in 1:iterations
 
   
   # update acceptance counters
-#  accpar += accpar_; accpare += accpare_; accinnove += accinnove_; accinnov += accinnov_; accmove += accmove_
+  accpar += accpar_; accpare += accpare_; accinnove += accinnove_; accinnov += accinnov_; accmove += accmove_
   # saving iterates
   push!(θsave, getpar(allparnames, ℙ))
   push!(llsave, ll)
