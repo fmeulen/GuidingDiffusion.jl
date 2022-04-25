@@ -4,9 +4,9 @@
 model= [:jr, :jr3][1]
 
 if model == :jr
-  θ0 =[3.25, 100.0, 22.0, 50.0, 135.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 6.0]  # except for μy as in Buckwar/Tamborrino/Tubikanec#
-  #θ0 =[3.25, 100.0, 22.0, 50.0, 185.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 6.0]  # this gives bimodality
- # θ0 =[3.25, 100.0, 22.0, 50.0, 530.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 5.0]  # also try this one
+  θ0 =[3.25, 100.0, 22.0, 50.0, 135.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 2000.0]  # except for μy as in Buckwar/Tamborrino/Tubikanec#
+  #θ0 =[3.25, 100.0, 22.0, 50.0, 185.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 2000.0]  # this gives bimodality
+ # θ0 =[3.25, 100.0, 22.0, 50.0, 530.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 2000.0]  # also try this one
   ℙ0 = JansenRitDiffusion(θ0...)
   @show properties(ℙ0)
   AuxType = JansenRitDiffusionAux
@@ -23,8 +23,8 @@ m,  = size(L)
 Σdiagel = 1e-7 # oorspr 1e-9
 Σ = SMatrix{m,m}(Σdiagel*I)
 
-#---- generate test data
-T = 2.0 #1.0
+#--- generate test data
+T = 3.0 
 x00 = @SVector zeros(6)
 W = sample((-1.0):0.0001:T, wienertype(ℙ0))                        #  sample(tt, Wiener{ℝ{1}}())
 Xf_prelim = Bridge.solve(Bridge.Euler(), x00, W, ℙ0)

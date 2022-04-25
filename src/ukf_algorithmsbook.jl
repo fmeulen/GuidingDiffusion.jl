@@ -64,7 +64,7 @@ end
 fs = (s,a) -> [s[1] + δ*s[2], s[2] - 9.8*sin(s[1]) * δ]
 fo = s -> [sin(s[1])]
 Σs = [δ^3/3 δ^2/2; δ^2/2 δ]
-Σo = [0.02]
+Σo = [0.2]
 𝒫 = FilteringProblem(fs, fo, Σs, Σo)
 
 a = 1.01  # parameter value (fixed, not used in this example)
@@ -106,50 +106,6 @@ scatter!(first.(oo), label="observations")
 filtered = map(x -> x.μ, 𝒰[2:end])
 plot!(first.(filtered), label="filtered component 1", linewidth=3)
 #plot!(last.(filtered), label="filtered component 2", linewidth=3)
-
-
-#ss - filtered
-# this looks weird
-#plot(map(x->x.Σ[1,1], 𝒰))
-
-
-
-
-##############################################################################
-# --- with KalmanFilters.jl ---
-##############################################################################
-
-using KalmanFilters
-
-
-# Process model
-F(s) = [s[1] + δ*s[2], s[2] - 9.8*sin(s[1]) * δ] 
-# Process noise covariance
-Q = [δ^3/3 δ^2/2; δ^2/2 δ]
-# Measurement model
-H(s) = [sin(s[1])]
-# Measurement noise covariance
-R = Matrix(𝒫.Σo')
-
-# Initial state and covariances
-s_init = [0.0, 0.0]
-P_init = [5.0 0.0 ; 0.0 5.0]
-
-# Take first measurement
-
-mu = measurement_update(s_init, P_init, oo[1], H, R)
-
-mu_save = [mu]
-
-for o in oo[2:end]
-    tu = time_update(get_state(mu), get_covariance(mu), F, Q)
-    mu = measurement_update(get_state(tu), get_covariance(tu), o, H, R)
-    push!(mu_save, mu)
-end
-
-plot(first.(ss),label="true latent state component 1", linewidth=2)
-scatter!(first.(oo), label="observations")
-plot!(first.(get_state.(mu_save)), linewidth=3)
 
 
 
