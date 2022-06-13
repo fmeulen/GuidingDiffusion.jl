@@ -84,24 +84,22 @@ savefig(joinpath(outdir,"deviations_guidedinitial.png"))
 
 TEST=false 
 if TEST
-
-# test
-S = Vern7direct();
-@time BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids);
+  S = Vern7direct();
+  @time BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids);
 
 
-S = DE(Vern7())
-@time  BackwardFilter(S, ℙ, AuxType, obs,obsvals, timegrids);
-# S = RK4()
-# @btime  BackwardFilter(S, ℙ, AuxType, obs, timegrids);
-@time forwardguide(x0, ℙ, Z, B);
+  S = DE(Vern7())
+  @time  BackwardFilter(S, ℙ, AuxType, obs,obsvals, timegrids);
+  # S = RK4()
+  # @btime  BackwardFilter(S, ℙ, AuxType, obs, timegrids);
+  @time forwardguide(x0, ℙ, Z, B);
 
-# using Profile
-# using ProfileView
-# Profile.init()
-# Profile.clear()
-# S = DE(Vern7())#S = Vern7direct();
-# @profile  BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids);
-# @profile parupdate!(B, XX, movetarget, obs, obsvals, S, AuxType, timegrids; verbose=verbose)(x0, ℙ, Z, ll);# θ and XX may get overwritten
-# ProfileView.view()
+  # using Profile
+  # using ProfileView
+  # Profile.init()
+  # Profile.clear()
+  # S = DE(Vern7())#S = Vern7direct();
+  # @profile  BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids);
+  # @profile parupdate!(B, XX, movetarget, obs, obsvals, S, AuxType, timegrids; verbose=verbose)(x0, ℙ, Z, ll);# θ and XX may get overwritten
+  # ProfileView.view()
 end

@@ -32,7 +32,13 @@ function log_proposal_ratio(θ, θᵒ, param)
       return log(θᵒ/θ)
     end
   end
-  
+
+"""
+    log_proposal_ratio(θ, θᵒ, move::ParMove)
+
+    Returns log of the proposal ratio in a MH step on transformed parameter space (hard coded function specifically for JR-model)
+    current iterate is θ, proposal is θᵒ
+"""
 function log_proposal_ratio(θ, θᵒ, move::ParMove)
     out =  0.0
     params = move.names
@@ -52,7 +58,7 @@ log_proposal_ratio(move) = (θ, θᵒ) -> log_proposal_ratio(θ, θᵒ, move)
   
 
 
-function adjust_PNCparamters!(ρs, ρ; thresh=0.25)
+function adjust_PCNparameters!(ρs, ρ; thresh=0.25)
     for i in eachindex(ρs)
         U = rand()
         ρs[i] = ρ * (U<thresh) + (U>=thresh)

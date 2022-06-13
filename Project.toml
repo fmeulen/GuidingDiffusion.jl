@@ -5,3 +5,6 @@ version = "0.1.0"
 
 [deps]
 Bijectors = "76274a88-744f-5084-9051-94815aaf08c4"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Yota = "cd998857-8626-517d-b929-70ad188a48f0"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"

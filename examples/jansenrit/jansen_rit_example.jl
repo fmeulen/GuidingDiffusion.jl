@@ -22,8 +22,9 @@ include("generatedata.jl")
 
 timegrids = set_timegrids(obs, 0.0005)
 
+Cinit = 815.0
 
-iterations = 10_00  #5_00
+iterations = 50_00  #5_00
 skip_it = 200
 subsamples = 0:skip_it:iterations # for saving paths
 
@@ -63,63 +64,40 @@ r=(short=0.2, long=1.0),
 μ=(short=0.2, long=1.0),
 σ=(short=0.2, long=1.0) )
 
-
+𝒯e = (A=(short=0.02, long=.1),C=(short=10.0, long=50.0))
 
 
 #import GuidingDiffusion: parameterkernel
 
 # some testing
-params = [:C, :α1]#, :B]
+params = [:C]   #, :α1]#, :B]
 
-moves = repeat([ParMove([:C], false, 𝒯, Π),
-         ParMove([:α1], false, 𝒯, Π)], 3)
-push!(moves, ParMove([:C, :α1], true, 𝒯, Π))
+# moves = repeat([ParMove([:C], false, 𝒯, Π),
+#          ParMove([:α1], false, 𝒯, Π)], 3)
+# push!(moves, ParMove([:C, :α1], true, 𝒯, Π))
 
-moves = [ParMove([:C], false, 𝒯, Π),ParMove([:α1], true, 𝒯, Π)]
+# moves = [ParMove([:C], false, 𝒯, Π),ParMove([:α1], true, 𝒯, Π)]
 
-params = [:α1]
-moves = [ParMove([:α1], true, 𝒯, Π)]
+#params = [:α1]
+#moves = [ParMove([:α1], true, 𝒯, Π)]
 
-        #  ,
-        #  ParMove([:B], false, 𝒯, Π)]
-#,ParMove([:C, :α1], false, 𝒯, Π)]
+moves =[ParMove([:C], false, 𝒯, Π)]
+movese =[ParMove([:C], false, 𝒯e, Π)]
 
-# very simple check case
-# params = [:C]
-# moves = [ParMove([:C], false, 𝒯, Π)]
-
-
-
-# moveσ = ParMove([:σ], parameterkernel((short=[3.0], long=[10.0]); s=0.0), priorσ, true)
-# moveCᵒ = ParMove([:C], parameterkernel((short=[40.0], long=[100.0])), priorC, false)
-# moveCσ = ParMove([:C, :σ], parameterkernel((short=[2.0, 10.0], long=[10.0, 10.0]); s=0.0), product_distribution([priorC, priorσ]), true)
-# moveCσα1 = ParMove([:C, :σ, :α1], parameterkernel((short=[2.0, 10.0, 0.01], long=[10.0, 10.0, 0.1]); s=0.0), product_distribution([priorC, priorσ, priorα1]), true)
-# moveCα1 = ParMove([:C, :α2], parameterkernel((short=[2.0,  0.01], long=[10.0,  0.1]); s=0.3), product_distribution([priorC,  priorα1]), false)
-# a small program
 
 # settings
 verbose = true # if true, surpress output written to console
 
 
-# θinit = 50.0
+
 # ESTσ = false
 
 
 
-# if ESTσ
-#   θ = (C=copy(θinit), σ = 2.0)
-#   movetarget = move
-#   allparnames = [:C, :σ]
-# else
-#   θ = (; C = copy(θinit) ) # initial value for parameter
-#   movetarget = move
-#   allparnames = [:C]
-# end
-
 # initialise parameter
-ℙ = setproperties(ℙ0,  α1 = 0.91)
-temp = 40.0 # temperature
-ℙe = setproperties(ℙ0,   σ = temp, α1 = 0.1)
+ℙ = setproperties(ℙ0,  C = Cinit)
+temp = 10_000.0 # temperature
+ℙe = setproperties(ℙ0,   σ = temp, C = Cinit)
 
 
 
@@ -155,29 +133,32 @@ llsave = [ll]
 
 XXesave = [copy(XXe)]
 
+# acceptance rate counters
 accinnov = 0
 accpar = 0
 accinnove = 0
 accpare = 0
 accmove = 0
 
-allparnamese = params
-
-
-exploring = [State(x0, copy(Ze), getpar(params,ℙe), copy(lle))]
-
 accpar_= accpare_ = accinnove_= accinnov_= accmove_ =0
+
+
+exploring = [State(x0, copy(Ze), getpar(params,ℙe), copy(lle))] # collection of samples from exploring chain
+
+
 for i in 1:iterations
   (i % 500 == 0) && println(i)
   global accpar_, accpare_,accinnove_, accinnov_, accmove_
-  
+
+  # update exploring chain
   for move ∈ moves
-    # update exploring chain
     lle, Be, ℙe, accpare_ = parupdate!(Be, XXe, move, obs, obsvals, S, AuxType, timegrids; verbose=verbose)(x0, ℙe, Ze, lle);
-    lle, accinnove_ = pcnupdate!(Be, ℙe, XXe, Zbuffer, Zeᵒ, ρse)(x0, Ze, lle); 
+  end
+  lle, accinnove_ = pcnupdate!(Be, ℙe, XXe, Zbuffer, Zeᵒ, ρse)(x0, Ze, lle); 
       
-    # update target chain   
-    smallworld = rand() > 0#.33
+  # update target chain   
+  for move ∈ moves
+    smallworld = rand() > 0.33
     if smallworld
       ll, B, ℙ, accpar_ = parupdate!(B, XX, move, obs, obsvals, S, AuxType, timegrids; verbose=verbose)(x0, ℙ, Z, ll);
       accmove_ =0
@@ -186,14 +167,15 @@ for i in 1:iterations
       ll, ℙ,  accmove_ = exploremoveσfixed!(B, Be, ℙe, move, XX, Zᵒ, w; verbose=verbose)(x0, ℙ, Z, ll) 
       accpar_ = 0
     end  
-    ll, accinnov_ = pcnupdate!(B, ℙ, XX, Zbuffer, Zᵒ, ρs)(x0, Z, ll);
   end
+  ll, accinnov_ = pcnupdate!(B, ℙ, XX, Zbuffer, Zᵒ, ρs)(x0, Z, ll);
 
   # update exploring
-  push!(exploring, State(x0, copy(Ze), getpar(params, ℙe), copy(lle)))   # collection of samples from exploring chain
+  push!(exploring, State(x0, copy(Ze), getpar(params, ℙe), copy(lle)))   
 
   # update acceptance counters
   accpar += accpar_; accpare += accpare_; accinnove += accinnove_; accinnov += accinnov_; accmove += accmove_
+  
   # saving iterates
   push!(θsave, getpar(params, ℙ))
   push!(llsave, ll)
@@ -249,17 +231,18 @@ plot!(p1, getindex.(θesave,i), label="exploring")
 
 @error "stop"
 
-i = 2
-p2 = plot(getindex.(θsave,i), label="target", legend=:top)
-hline!(p2, [getfield(ℙ0,params[i])], label="",color=:black)
-plot!(p2, getindex.(θesave,i), label="exploring")
+
+# i = 2
+# p2 = plot(getindex.(θsave,i), label="target", legend=:top)
+# hline!(p2, [getfield(ℙ0,params[i])], label="",color=:black)
+# plot!(p2, getindex.(θesave,i), label="exploring")
 
 # i = 3
 # p3 = plot(getindex.(θsave,i), label="target", legend=:top)
 # hline!(p3, [getfield(ℙ0,params[i])], label="",color=:black)
 # plot!(p3, getindex.(θesave,i), label="exploring")
 
-plot(p1, p2, layout = @layout [a; b])  
+#plot(p1, p2, layout = @layout [a; b])  
 
 
 
@@ -273,7 +256,7 @@ end
 savefig(joinpath(outdir,"traceplots.png"))
 
 
-scatter(getindex.(θsave,1), getindex.(θsave,2))
+#scatter(getindex.(θsave,1), getindex.(θsave,2))
 
 
 

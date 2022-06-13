@@ -10,7 +10,7 @@ struct JansenRitDiffusion{T} <: ContinuousTimeProcess{ℝ{6}}
     v0::T   # firing threshold (excitability of the populations)
     r::T    # slope of the sigmoid at v0;
     μ::T    # mean of average firing rate
-    σ::T    # sd of average firing rate (d p(t) = μ dt + σ d Wₜ) (stochasticity accounting for a non specific background activity)
+    σ::T    # A * a * sd of average firing rate (d p(t) = μ dt + σ d Wₜ) (stochasticity accounting for a non specific background activity)
 end
 
 #  auxiliary process
@@ -39,7 +39,7 @@ JansenRitDiffusionAux(T, vT, x1, guidingterm_with_x1, P::JansenRitDiffusion) =
 
 sigm(x, P::Union{JansenRitDiffusion, JansenRitDiffusionAux}) = 2.0P.e0 / (1.0 + exp(P.r*(P.v0 - x)))
 μy(P::Union{JansenRitDiffusion, JansenRitDiffusionAux}) =  P.a * P.A * P.μ #constant
-σy(P::Union{JansenRitDiffusion, JansenRitDiffusionAux}) =  P.a * P.A * P.σ #constant
+σy(P::Union{JansenRitDiffusion, JansenRitDiffusionAux}) = P.σ# P.a * P.A * P.σ #constant
 C1(P::Union{JansenRitDiffusion, JansenRitDiffusionAux}) = P.C
 C2(P::Union{JansenRitDiffusion, JansenRitDiffusionAux}) = P.α1*P.C
 C3(P::Union{JansenRitDiffusion, JansenRitDiffusionAux}) = P.α2*P.C

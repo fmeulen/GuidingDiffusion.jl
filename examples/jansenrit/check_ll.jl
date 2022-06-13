@@ -43,20 +43,22 @@ plot(Cgrid, llC, label="loglik"); vline!([ℙ0.C], label="true val of C")
 
 llμ =[]
 μgrid = 5.0:2.0:400.0
+
+B = BackwardFilter(S, ℙ0, AuxType, obs, obsvals, timegrids) ;
 for μ ∈ μgrid
-  ℙ = setproperties(ℙ0, μy=μ)
-  B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
+  ℙ = setproperties(ℙ0, μ=μ)
   _, ll = forwardguide(B, ℙ)(x0, Z);
   push!(llμ, copy(ll))
 end
-plot(μgrid, llμ, label="loglik"); vline!([ℙ0.μy], label="true val of μ")
+plot(μgrid, llμ, label="loglik"); vline!([ℙ0.μ], label="true val of μ")
 
 
 llA =[]
 Agrid = .2:.2:10.0
+B = BackwardFilter(S, ℙ0, AuxType, obs, obsvals, timegrids) ;
 for A ∈ Agrid
   ℙ = setproperties(ℙ0, A=A)
-  B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
+  #B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
   _, ll = forwardguide(B, ℙ)(x0, Z);
   push!(llA, copy(ll))
 end
@@ -66,33 +68,36 @@ plot(Agrid[10:end], llA[10:end], label="loglik"); vline!([ℙ0.A], label="true v
 
 llσ =[]
 σgrid = 1.0:.2:42.0
+#B = BackwardFilter(S, ℙ0, AuxType, obs, obsvals, timegrids) ;
 for σ ∈ σgrid
-  ℙ = setproperties(ℙ0, σy=σ)
+  ℙ = setproperties(ℙ0, σ=σ)
   B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
   _, ll = forwardguide(B, ℙ)(x0, Z);
   push!(llσ, copy(ll))
 end
 plot(σgrid, llσ, label="loglik")
- vline!([ℙ0.σy], label="true val of σy")
+vline!([ℙ0.σ], label="true val of σy")
 
- llνmax = []
- νmaxgrid = .1:.2:8.0
- for νmax ∈ νmaxgrid
-   ℙ = setproperties(ℙ0, νmax=νmax)
-   B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
+ llv0 = []
+ B = BackwardFilter(S, ℙ0, AuxType, obs, obsvals, timegrids) ;
+ v0grid = .1:.2:18.0
+ for v0 ∈ v0grid
+   ℙ = setproperties(ℙ0, v0=v0)
+   
    _, ll = forwardguide(B, ℙ)(x0, Z);
-   push!(llνmax, copy(ll))
+   push!(llv0, copy(ll))
  end
- plot(νmaxgrid, llνmax, label="loglik")
-  vline!([ℙ0.νmax], label="true val of νmax")
+ plot(v0grid, llv0, label="loglik")
+  vline!([ℙ0.v0], label="true val of νmax")
  
 
 
   llα1 = []
+  B = BackwardFilter(S, ℙ0, AuxType, obs, obsvals, timegrids) ;
   α1grid = .01:.02:0.99
   for α1 ∈ α1grid
     ℙ = setproperties(ℙ0, α1=α1)
-    B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
+
     _, ll = forwardguide(B, ℙ)(x0, Z);
     push!(llα1, copy(ll))
   end
@@ -101,10 +106,11 @@ plot(σgrid, llσ, label="loglik")
   
 
    llα2 = []
+   B = BackwardFilter(S, ℙ0, AuxType, obs, obsvals, timegrids) ;
    α2grid = .01:.02:0.99
    for α2 ∈ α2grid
      ℙ = setproperties(ℙ0, α2=α2)
-     B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
+  
      _, ll = forwardguide(B, ℙ)(x0, Z);
      push!(llα2, copy(ll))
    end
@@ -119,7 +125,7 @@ llCσ = zeros(length(Cgrid), length(σgrid))
 for i ∈ eachindex(Cgrid)
     println(i)
     for j ∈ eachindex(σgrid)
-        ℙ = setproperties(ℙ0, C=Cgrid[i], σy = σgrid[j])
+        ℙ = setproperties(ℙ0, C=Cgrid[i], σ = σgrid[j])
         B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
         #println(ℙ.C)
         _, ll = forwardguide(B, ℙ)(x0, Z);
@@ -131,7 +137,7 @@ plot(Cgrid, llC, label="loglik"); vline!([ℙ0.C], label="true val of C")
 heatmap(σgrid, Cgrid,  llCσ)
 heatmap(llCσ)
 ℙ0.C
-ℙ0.σy
+ℙ0.σ
 
 plot(σgrid, llCσ[30,:])
 
@@ -164,6 +170,85 @@ Optim.optimize(loglik(ℙ0, x0, Z, parnames,  S, AuxType, obs, obsvals, timegrid
 
 ForwardDiff.gradient(loglik(ℙ0, x0, Z, parnames,  S, AuxType, obs, obsvals, timegrids), lower, upper, θ)
 
-
-
+Zygote.gradient(loglik(ℙ0, x0, Z, parnames,  S, AuxType, obs, obsvals, timegrids),  θ)
+Yota.grad(loglik(ℙ0, x0, Z, parnames,  S, AuxType, obs, obsvals, timegrids),  θ)
 # drawing from the priors for initialisation 
+
+
+# test 
+fff(x) = sum(sin.(cos.(x)))
+fff(rand(5))
+
+x_eval = rand(500)
+Zygote.gradient(fff, x_eval)
+Yota.grad(fff, x_eval)
+
+
+# further testing
+
+function loglik(θ, x0, Z, S, AuxType, obs, obsvals, timegrids)
+  θp =[θ[1], θ[2], 22.0, 50.0, 135.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 2000.0]  # except for μy as in Buckwar/Tamborrino/Tubikanec#
+  ℙ = JansenRitDiffusion(θp...)
+    B = BackwardFilter(S, ℙ, AuxType, obs, obsvals, timegrids) ;
+  _, ll = forwardguide(B, ℙ)(x0, Z);
+  ll
+end
+
+loglik(x0,Z,  S, AuxType, obs, obsvals, timegrids) = (θ) -> loglik(θ, x0, Z,  S, AuxType, obs, obsvals, timegrids)
+
+θ = [50.0, 100.0]
+Zygote.gradient(loglik(x0, Z,  S, AuxType, obs, obsvals, timegrids),  θ)
+Yota.grad(loglik(x0, Z,  S, AuxType, obs, obsvals, timegrids),  θ)
+
+ff = (Z)-> forwardguide(B, ℙ)(x0, Z)[2]
+ff(Z)
+Zygote.gradient(ff, Z)
+Yota.grad(ff, Z)
+
+
+logh̃(x, h0) =  dot(x, -0.5 * h0.H * x + h0.F) - h0.C    
+
+function orwardguide(x0, ℙ, Z, M::Message)
+    ℙ̃ = M.ℙ̃
+    tt = M.tt
+    X = [x0]
+    x = x0
+    ll::eltype(x0)  = 0.
+    for i ∈ 1:length(tt)-1
+        dt = tt[i+1]-tt[i]
+        b = Bridge.b(tt[i], x, ℙ) 
+        r = M.F[i] - M.H[i] * x 
+        σ = Bridge.σ(tt[i], x, ℙ)
+        dz = Z.yy[i+1] - Z.yy[i]
+        
+        # likelihood terms
+        if i<=length(tt)-1-sk
+            db = b  - Bridge.b(tt[i], x, ℙ̃)
+            ll += dot(db, r) * dt
+            if !Bridge.constdiff(ℙ) || !Bridge.constdiff(ℙ̃)
+                σ̃ = Bridge.σ(tt[i], ℙ̃)
+                ll += 0.5*Bridge.inner( σ' * r) * dt    # |σ(t,x)' * tilder(t,x)|^2
+                ll -= 0.5*Bridge.inner(σ̃' * r) * dt   # |tildeσ(t)' * tilder(t,x)|^2
+                a = Bridge.a(tt[i], x, ℙ)
+                ã = Bridge.a(tt[i], ℙ̃)
+                ll += 0.5*dot(a-ã, M.H[i]) * dt
+            end
+        end
+        x  +=  b * dt + σ* (σ' * r * dt + dz) 
+        #push!(X, copy(x))
+    end
+    X, ll
+end
+
+
+
+ff = (Z) ->  orwardguide(x0, ℙ, Z.z[1], B.Ms[1])[2]
+sk=1
+ff(Z)
+Zygote.gradient(ff, Z)
+Yota.grad(ff,Z)
+
+ff2 = (u) ->  orwardguide(x0, ℙ, u, B.Ms[1])[2]
+Zygote.gradient(ff2, Z.z[1])
+ForwardDiff.gradient(ff2, Z.z[1])
+# does Zygote work with static arrays?
