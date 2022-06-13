@@ -33,30 +33,34 @@ Xf = SamplePath(Xf_prelim.tt[10001:end], Xf_prelim.yy[10001:end])
 x0 = Xf.yy[1]
 dt = Xf.tt[2]-Xf.tt[1]
 
-skipobs = 400# I took 400  all the time
+skipobs = 400                                     # I took 400  all the time
 obstimes =  Xf.tt[1:skipobs:end]
 obsvals = map(x -> L*x, Xf.yy[1:skipobs:end])
 pF = plot_all(ℙ0,  Xf, obstimes, obsvals)
 savefig(joinpath(outdir, "forwardsimulated.png"))
 
-#------- process observations, assuming x0 known
-obs = [Observation(obstimes[1],  x0,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
-for i in 2:length(obstimes)
-  push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
+
+
+prior_on_x0 = true
+if !prior_on_x0      #------- process observations, assuming x0 known
+  obs = [Observation(obstimes[1],  x0,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
+  for i in 2:length(obstimes)
+    push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
+  end
+else         # -- now obs with staionary prior on x0
+  obs = [Observation(-1.0,  x00,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
+  for i in 1:length(obstimes)
+    push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
+  end
+  pushfirst!(obsvals, SA[0.0])
+  Xf = Xf_prelim
+  x0 = x00
 end
 
-@show ℙ0
+
 
 #----------- obs and obsvals are input to mcmc algorithm
-
-# -- now obs with staionary prior on x0
-# obs = [Observation(-1.0,  x00,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
-# for i in 1:length(obstimes)
-#   push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
-# end
-# pushfirst!(obsvals, SA[0.0])
-# Xf = Xf_prelim
-# x0 = x00
+@show ℙ0
 
 
 # remainder is checking 

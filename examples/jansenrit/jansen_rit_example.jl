@@ -22,7 +22,7 @@ include("generatedata.jl")
 
 timegrids = set_timegrids(obs, 0.0005)
 
-Cinit = 815.0
+Cinit = 15.0
 
 iterations = 50_00  #5_00
 skip_it = 200
