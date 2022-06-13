@@ -9,7 +9,17 @@ struct DE{T} <: Solver
     solvertype::T
 end
 
+"""
+    parameterkernel(θ, 𝒯 , s, Π) 
 
+    Consstruct kernel for generating a new proposal θ∘ from state θ
+    Parameter s is the probability of generating the proposal with widt 'long' paramter from 𝒯
+    Π is passed to extract support restrictions and apply transformations to ensure θ∘ is in the support
+
+    Usage:
+    K = parameterkernel(𝒯, prior, s)
+    θ∘ = K(θ)
+"""
 function parameterkernel(θ, 𝒯 , s, Π) 
     b = bijector.(Π) # [bijector(x) for x ∈ Π]
     b⁻ = inverse.(b)
@@ -27,6 +37,7 @@ parameterkernel(𝒯, prior, s) = (θ) -> parameterkernel(θ, 𝒯, s, prior)
 
     provide 
     names: vector of Symbols, which are names of pars
+    K: kernel for proposing a new value of the parameter
     prior: (product)-distribution 
     recomputeguidingterm: Boolean whether necessary to recompute guiding term with this move
 """
@@ -114,7 +125,6 @@ end
     Message
 
         struct containing all information for guiding on a segment (equivalently kernel)
-    ℙ:  target diffusion
     ℙ̃:  auxiliary NclarDiffusion
     tt: time grid for diffusion (including start and end time)
     H:  H-values on tt
