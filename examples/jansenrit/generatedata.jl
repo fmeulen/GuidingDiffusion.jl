@@ -37,7 +37,7 @@ skipobs = 400                                     # I took 400  all the time
 obstimes =  Xf.tt[1:skipobs:end]
 obsvals = map(x -> L*x, Xf.yy[1:skipobs:end])
 pF = plot_all(ℙ0,  Xf, obstimes, obsvals)
-savefig(joinpath(outdir, "forwardsimulated.png"))
+savefig(joinpath(outdir, "forwardsimulated_truepars.png"))
 
 prior_on_x0 = true
 
@@ -76,15 +76,15 @@ XX, ll = forwardguide(B, ℙ0)(x0, Z);
 pG = plot_all(ℙ0, timegrids, XX)
 l = @layout [a;b]
 plot(pF, pG, layout=l)
-savefig(joinpath(outdir,"forward_guidedinitial_separate.png"))
+savefig(joinpath(outdir,"forward_guidedinitial_separate_truepars.png"))
 
 plot_all(ℙ0,Xf,  obstimes, obsvals, timegrids, XX)
-savefig(joinpath(outdir,"forward_guidedinitial_overlaid.png"))
+savefig(joinpath(outdir,"forward_guidedinitial_overlaid_truepars.png"))
 
 
 deviations = [obsvals[i] - L * XX[i-1][end]  for i in 2:length(obsvals)]
 plot(obstimes[2:end], first.(deviations))
-savefig(joinpath(outdir,"deviations_guidedinitial.png"))
+savefig(joinpath(outdir,"deviations_guidedinitial_truepars.png"))
 
 
 TEST=false 

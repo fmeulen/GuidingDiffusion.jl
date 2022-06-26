@@ -1,0 +1,25 @@
+params [:C, :μ]
+
+iterations 500
+swap_allowed true
+accperc_innov_target 65.4
+accperc_par_target 39.2
+accperc_innov_exploring 29.2
+accperc_par_exploring 34.4
+accperc_swap 0.2
+
+tuning pars
+(A = (short = 0.02, long = 0.1), B = (short = 0.2, long = 1.0), C = (short = 0.01, long = 0.2), α1 = (short = 0.01, long = 0.1), α2 = (short = 0.02, long = 0.1), e0 = (short = 0.2, long = 1.0), v0 = (short = 0.2, long = 1.0), r = (short = 0.2, long = 1.0), μ = (short = 0.2, long = 1.0), σ = (short = 0.2, long = 1.0))
+
+prior
+(A = Exponential{Float64}(θ=3.25), B = Exponential{Float64}(θ=22.0), C = Exponential{Float64}(θ=135.0), α1 = Beta{Float64}(α=1.0, β=1.0), α2 = Beta{Float64}(α=1.0, β=1.0), e0 = Exponential{Float64}(θ=5.0), v0 = Exponential{Float64}(θ=6.0), r = Exponential{Float64}(θ=0.56), μ = Exponential{Float64}(θ=200.0), σ = InverseGamma{Float64}(
+invd: Gamma{Float64}(α=0.1, θ=10.0)
+θ: 0.1
+)
+)
+ρ 0.99
+ρe 0.99
+
+ℙinit JansenRitDiffusion{Float64}(3.25, 100.0, 22.0, 50.0, 15.0, 0.8, 0.25, 5.0, 6.0, 0.56, 100.0, 2000.0)
+ℙ0 JansenRitDiffusion{Float64}(3.25, 100.0, 22.0, 50.0, 135.0, 0.8, 0.25, 5.0, 6.0, 0.56, 200.0, 2000.0)
+temperature temp  10000.0
