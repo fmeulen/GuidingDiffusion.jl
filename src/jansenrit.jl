@@ -165,7 +165,7 @@ end
 
 
 function BackwardFilter(S, ℙ::JansenRitDiffusion, AuxType, obs, obsvals, timegrids) 
-    ℙ̃s = [AuxType(obs[i].t, obsvals[i][1], false, false, ℙ) for i in 2:length(obs)] # careful here: observation is passed as Float64
+   ℙ̃s = [AuxType(obs[i].t, obsvals[i][1], false, false, ℙ) for i in 2:length(obs)] # careful here: observation is passed as Float64
    h0, Ms = backwardfiltering(S, obs, timegrids, ℙ̃s)
    #new{eltype(Ms), typeof(h0)}(Ms, h0)
    BackwardFilter(Ms,h0)

@@ -23,6 +23,7 @@ include("generatedata.jl")
 timegrids = set_timegrids(obs, 0.0005)
 
 Cinit = 15.0
+μinit = 100.0
 
 iterations = 50_00  #5_00
 skip_it = 200
@@ -64,13 +65,13 @@ r=(short=0.2, long=1.0),
 μ=(short=0.2, long=1.0),
 σ=(short=0.2, long=1.0) )
 
-𝒯e = (A=(short=0.02, long=.1),C=(short=10.0, long=50.0))
+𝒯e = (A=(short=0.02, long=.1),C=(short=10.0, long=50.0), μ=(short=.5, long=2.0))
 
 
 #import GuidingDiffusion: parameterkernel
 
 # some testing
-params = [:C]   #, :α1]#, :B]
+params = [:C, :μ]
 
 # moves = repeat([ParMove([:C], false, 𝒯, Π),
 #          ParMove([:α1], false, 𝒯, Π)], 3)
@@ -81,8 +82,10 @@ params = [:C]   #, :α1]#, :B]
 #params = [:α1]
 #moves = [ParMove([:α1], true, 𝒯, Π)]
 
-moves =[ParMove([:C], false, 𝒯, Π)]
-movese =[ParMove([:C], false, 𝒯e, Π)]
+moves =[ParMove([:C], false, 𝒯, Π), ParMove([:μ], true, 𝒯, Π)]
+movese =[ParMove([:C], false, 𝒯e, Π), ParMove([:μ], true, 𝒯e, Π)]
+
+swapmove = ParMove([:C,:μ], false, 𝒯, Π)  # should contain all pars in params
 
 
 # settings
@@ -95,9 +98,9 @@ verbose = true # if true, surpress output written to console
 
 
 # initialise parameter
-ℙ = setproperties(ℙ0,  C = Cinit)
+ℙ = setproperties(ℙ0,  C = Cinit, μ=μinit)
 temp = 10_000.0 # temperature
-ℙe = setproperties(ℙ0,   σ = temp, C = Cinit)
+ℙe = setproperties(ℙ0,   σ = temp, C = Cinit, μ=μinit)
 
 
 
@@ -151,7 +154,7 @@ for i in 1:iterations
   global accpar_, accpare_,accinnove_, accinnov_, accmove_
 
   # update exploring chain
-  for move ∈ moves
+  for move ∈ movese
     lle, Be, ℙe, accpare_ = parupdate!(Be, XXe, move, obs, obsvals, S, AuxType, timegrids; verbose=verbose)(x0, ℙe, Ze, lle);
   end
   lle, accinnove_ = pcnupdate!(Be, ℙe, XXe, Zbuffer, Zeᵒ, ρse)(x0, Ze, lle); 
@@ -164,7 +167,7 @@ for i in 1:iterations
       accmove_ =0
     else
       w = sample(exploring)     # randomly choose from samples of exploring chain
-      ll, ℙ,  accmove_ = exploremoveσfixed!(B, Be, ℙe, move, XX, Zᵒ, w; verbose=verbose)(x0, ℙ, Z, ll) 
+      ll, ℙ,  accmove_ = exploremoveσfixed!(B, Be, ℙe, swapmove, XX, Zᵒ, w; verbose=verbose)(x0, ℙ, Z, ll) 
       accpar_ = 0
     end  
   end
@@ -229,13 +232,15 @@ p1 = plot(getindex.(θsave,i), label="target", legend=:top)
 hline!(p1, [getfield(ℙ0,params[i])], label="",color=:black)
 plot!(p1, getindex.(θesave,i), label="exploring")
 
+
+
+
+i = 2
+p2 = plot(getindex.(θsave,i), label="target", legend=:top)
+hline!(p2, [getfield(ℙ0,params[i])], label="",color=:black)
+plot!(p2, getindex.(θesave,i), label="exploring")
+
 @error "stop"
-
-
-# i = 2
-# p2 = plot(getindex.(θsave,i), label="target", legend=:top)
-# hline!(p2, [getfield(ℙ0,params[i])], label="",color=:black)
-# plot!(p2, getindex.(θesave,i), label="exploring")
 
 # i = 3
 # p3 = plot(getindex.(θsave,i), label="target", legend=:top)

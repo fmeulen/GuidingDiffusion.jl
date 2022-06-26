@@ -22,7 +22,7 @@ end
 """
 function parameterkernel(θ, 𝒯 , s, Π) 
     b = bijector.(Π) # [bijector(x) for x ∈ Π]
-    b⁻ = inverse.(b)
+    b⁻ = Bijectors.inverse.(b)
     shortrange = rand() > s
     Δ = shortrange ?  rand(MvNormal(𝒯.short)) : rand(MvNormal(𝒯.long))
     #inverse(b)(b(θ) + Δ)

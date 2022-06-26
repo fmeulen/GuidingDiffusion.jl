@@ -25,7 +25,7 @@ m,  = size(L)
 
 #--- generate test data
 T = 3.0 
-x00 = @SVector zeros(6)
+x00 = @SVector [-0.3, 2.0, 3.0, -2.0, -1.5, 1.0] # in generating the data, take the intial point completelly arbitrary 
 W = sample((-1.0):0.0001:T, wienertype(ℙ0))                        #  sample(tt, Wiener{ℝ{1}}())
 Xf_prelim = Bridge.solve(Bridge.Euler(), x00, W, ℙ0)
 # drop initial nonstationary behaviour
@@ -39,20 +39,21 @@ obsvals = map(x -> L*x, Xf.yy[1:skipobs:end])
 pF = plot_all(ℙ0,  Xf, obstimes, obsvals)
 savefig(joinpath(outdir, "forwardsimulated.png"))
 
-
-
 prior_on_x0 = true
+
 if !prior_on_x0      #------- process observations, assuming x0 known
   obs = [Observation(obstimes[1],  x0,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
   for i in 2:length(obstimes)
     push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
   end
 else         # -- now obs with staionary prior on x0
-  obs = [Observation(-1.0,  x00,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
+  zerovec = @SVector zeros(6)
+  obs = [Observation(-1.0,  zerovec,  SMatrix{6,6}(1.0I), SMatrix{6,6}(Σdiagel*I))]
   for i in 1:length(obstimes)
     push!(obs, Observation(obstimes[i], obsvals[i], L, Σ));
   end
   pushfirst!(obsvals, SA[0.0])
+  pushfirst!(obstimes, -1.0)
   Xf = Xf_prelim
   x0 = x00
 end
@@ -81,7 +82,7 @@ plot_all(ℙ0,Xf,  obstimes, obsvals, timegrids, XX)
 savefig(joinpath(outdir,"forward_guidedinitial_overlaid.png"))
 
 
-deviations = [obsvals[i] - L * XX[i-1][end]  for i in 2:length(obs)]
+deviations = [obsvals[i] - L * XX[i-1][end]  for i in 2:length(obsvals)]
 plot(obstimes[2:end], first.(deviations))
 savefig(joinpath(outdir,"deviations_guidedinitial.png"))
 
