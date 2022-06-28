@@ -31,15 +31,32 @@ Z = Innovations(timegrids, ℙ0);
 XX, ll = forwardguide(B, ℙ0)(x0, Z);
 plot_all(ℙ0,Xf,  obstimes, obsvals, timegrids, XX)
 
-llC =[]
-Cgrid = 5.0:2.5:400.0
-for C ∈ Cgrid
-  ℙ = setproperties(ℙ0, C=C)
-  println(ℙ.C)
-  _, ll = forwardguide(B, ℙ)(x0, Z);
-  push!(llC, copy(ll))
+
+
+
+Cgrid = 5.0:0.5:400.0
+N_mc = 25
+Zs = [Innovations(timegrids, ℙ0)]
+for j=2:N_mc
+  push!(Zs, Innovations(timegrids, ℙ0))
 end
-plot(Cgrid, llC, label="loglik"); vline!([ℙ0.C], label="true val of C")
+llC = zeros(length(Cgrid))
+for k ∈ eachindex(Cgrid)
+  ℙ = setproperties(ℙ0, C=Cgrid[k])
+  println(ℙ.C)
+  s = 0.0
+  for j in 1:N_mc
+    _, ll = forwardguide(B, ℙ)(x0, Zs[j]);
+    s += ll
+  end
+  #push!(llC, copy(ll))
+ llC[k] = s/N_mc
+end
+pa = plot(Cgrid, llC, label="loglik"); vline!([ℙ0.C], label="true val of C",legend=:bottomright)
+half_ind = div(length(Cgrid),2)
+pb = plot(Cgrid[1:half_ind], llC[1:half_ind], label=""); vline!([ℙ0.C], label="")
+lay = @layout [a b]
+plot(pa, pb, layout=lay, xlabel="C", ylabel="loglikelihood") 
 
 llμ =[]
 μgrid = 5.0:2.0:400.0
