@@ -1,4 +1,4 @@
-#Random.seed!(5)
+Random.seed!(5)
 
 
 model= [:jr, :jr3][1]
@@ -25,7 +25,7 @@ m,  = size(L)
 
 #--- generate test data
 T = 3.0 
-x00 = @SVector [-0.3, 2.0, 3.0, -2.0, -1.5, 1.0] # in generating the data, take the intial point completelly arbitrary 
+x00 = @SVector [0.3, 2.0, 3.0, 2.0, 1.5, 1.0] # in generating the data, take the intial point completelly arbitrary 
 W = sample((-1.0):0.0001:T, wienertype(ℙ0))                        #  sample(tt, Wiener{ℝ{1}}())
 Xf_prelim = Bridge.solve(Bridge.Euler(), x00, W, ℙ0)
 # drop initial nonstationary behaviour
@@ -55,7 +55,7 @@ else         # -- now obs with staionary prior on x0
   pushfirst!(obsvals, SA[0.0])
   pushfirst!(obstimes, -1.0)
   Xf = Xf_prelim
-  x0 = x00
+  x0 = zerovec
 end
 
 

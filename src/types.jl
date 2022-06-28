@@ -21,13 +21,13 @@ end
     θ∘ = K(θ)
 """
 function parameterkernel(θ, 𝒯 , s, Π) 
-    b = bijector.(Π) # [bijector(x) for x ∈ Π]
-    b⁻ = Bijectors.inverse.(b)
+    b = bijector.(Π) # [bijector(x) for x ∈ Π]  # e.g. for if Π is Exponential distribution, this is just the log
+    b⁻ = Bijectors.inverse.(b)                  # and then this is the exp-function
     shortrange = rand() > s
     Δ = shortrange ?  rand(MvNormal(𝒯.short)) : rand(MvNormal(𝒯.long))
     #inverse(b)(b(θ) + Δ)
     #@show θ
-    [b⁻[i]( b[i](θ[i]) + Δ[i] ) for i in eachindex(θ)]
+    [b⁻[i]( b[i](θ[i]) + Δ[i] ) for i in eachindex(θ)]  #add disturbance to log(θ) and then take exponential
 end
 parameterkernel(𝒯, prior, s) = (θ) -> parameterkernel(θ, 𝒯, s, prior) 
 
