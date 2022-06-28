@@ -84,6 +84,9 @@ params = [:C]   #, :α1]#, :B]
 moves =[ParMove([:C], false, 𝒯, Π)]
 movese =[ParMove([:C], false, 𝒯e, Π)]
 
+# moves =[ParMove([:C], false, 𝒯, Π), ParMove([:μ], true, 𝒯, Π)]
+# movese =[ParMove([:C], false, 𝒯e, Π), ParMove([:μ], true, 𝒯, Π)]
+
 
 # settings
 verbose = true # if true, surpress output written to console
@@ -232,10 +235,10 @@ plot!(p1, getindex.(θesave,i), label="exploring")
 @error "stop"
 
 
-# i = 2
-# p2 = plot(getindex.(θsave,i), label="target", legend=:top)
-# hline!(p2, [getfield(ℙ0,params[i])], label="",color=:black)
-# plot!(p2, getindex.(θesave,i), label="exploring")
+i = 2
+p2 = plot(getindex.(θsave,i), label="target", legend=:top)
+hline!(p2, [getfield(ℙ0,params[i])], label="",color=:black)
+plot!(p2, getindex.(θesave,i), label="exploring")
 
 # i = 3
 # p3 = plot(getindex.(θsave,i), label="target", legend=:top)
